@@ -8,11 +8,11 @@ namespace TrilhaApiDesafio.Controllers
     [Route("[controller]")]
     public class TarefaController : ControllerBase
     {
-        private readonly OrganizadorContext _context;
+        private readonly OrganizadorContext Context;
 
         public TarefaController(OrganizadorContext context)
         {
-            _context = context;
+            Context = context;
         }
 
         [HttpGet("{id}")]
@@ -21,14 +21,17 @@ namespace TrilhaApiDesafio.Controllers
             // TODO: Buscar o Id no banco utilizando o EF
             // TODO: Validar o tipo de retorno. Se não encontrar a tarefa, retornar NotFound,
             // caso contrário retornar OK com a tarefa encontrada
-            return Ok();
+            var task = Context.Tarefas.Find(id);
+            
+            if (task == null) return NotFound(); else return Ok(task);
         }
 
         [HttpGet("ObterTodos")]
         public IActionResult ObterTodos()
         {
             // TODO: Buscar todas as tarefas no banco utilizando o EF
-            return Ok();
+            var listTask = Context.Tarefas.ToList();
+            return Ok(listTask);
         }
 
         [HttpGet("ObterPorTitulo")]
@@ -36,13 +39,14 @@ namespace TrilhaApiDesafio.Controllers
         {
             // TODO: Buscar  as tarefas no banco utilizando o EF, que contenha o titulo recebido por parâmetro
             // Dica: Usar como exemplo o endpoint ObterPorData
-            return Ok();
+            var tarefa = Context.Tarefas.Where(x => x.Titulo == titulo);
+            return Ok(tarefa);
         }
 
         [HttpGet("ObterPorData")]
         public IActionResult ObterPorData(DateTime data)
         {
-            var tarefa = _context.Tarefas.Where(x => x.Data.Date == data.Date);
+            var tarefa = Context.Tarefas.Where(x => x.Data.Date == data.Date);
             return Ok(tarefa);
         }
 
@@ -51,7 +55,7 @@ namespace TrilhaApiDesafio.Controllers
         {
             // TODO: Buscar  as tarefas no banco utilizando o EF, que contenha o status recebido por parâmetro
             // Dica: Usar como exemplo o endpoint ObterPorData
-            var tarefa = _context.Tarefas.Where(x => x.Status == status);
+            var tarefa = Context.Tarefas.Where(x => x.Status == status);
             return Ok(tarefa);
         }
 
@@ -68,7 +72,7 @@ namespace TrilhaApiDesafio.Controllers
         [HttpPut("{id}")]
         public IActionResult Atualizar(int id, Tarefa tarefa)
         {
-            var tarefaBanco = _context.Tarefas.Find(id);
+            var tarefaBanco = Context.Tarefas.Find(id);
 
             if (tarefaBanco == null)
                 return NotFound();
@@ -78,18 +82,29 @@ namespace TrilhaApiDesafio.Controllers
 
             // TODO: Atualizar as informações da variável tarefaBanco com a tarefa recebida via parâmetro
             // TODO: Atualizar a variável tarefaBanco no EF e salvar as mudanças (save changes)
-            return Ok();
+            tarefaBanco.Data = tarefa.Data;
+            tarefaBanco.Descricao = tarefa.Descricao;
+            tarefaBanco.Status = tarefa.Status;
+            tarefaBanco.Titulo = tarefa.Titulo;
+
+            Context.Tarefas.Update(tarefaBanco);
+            Context.SaveChanges();
+
+            return Ok(tarefaBanco);
         }
 
         [HttpDelete("{id}")]
         public IActionResult Deletar(int id)
         {
-            var tarefaBanco = _context.Tarefas.Find(id);
+            var tarefaBanco = Context.Tarefas.Find(id);
 
             if (tarefaBanco == null)
                 return NotFound();
 
             // TODO: Remover a tarefa encontrada através do EF e salvar as mudanças (save changes)
+            Context.Tarefas.Remove(tarefaBanco);
+            Context.SaveChanges();
+            
             return NoContent();
         }
     }
